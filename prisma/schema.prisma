@@ -1,0 +1,81 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  contents     Content[]
+}
+
+model Content {
+  id               String            @id @default(cuid())
+  contentId        String            @unique
+  ownerId          String
+  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  category         String
+  tags             String?
+  creatorName      String?
+  licenseInfo      String?
+  fileName         String
+  fileType         String
+  fileSize         Int
+  sha256Hash       String            @unique
+  storageUrl       String
+  status           String            @default("REGISTERED")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  verifications    Verification[]
+  blockchainRecord BlockchainRecord?
+  aiAnalysis       AIAnalysis?
+}
+
+model Verification {
+  id               String   @id @default(cuid())
+  contentId        String
+  content          Content  @relation(fields: [contentId], references: [contentId], onDelete: Cascade)
+  verificationHash String
+  result           String
+  verifiedAt       DateTime @default(now())
+  ipAddress        String?
+  createdAt        DateTime @default(now())
+}
+
+model BlockchainRecord {
+  id                String   @id @default(cuid())
+  contentId         String   @unique
+  content           Content  @relation(fields: [contentId], references: [contentId], onDelete: Cascade)
+  transactionHash   String
+  blockchainNetwork String   @default("Polygon Amoy / Ethereum Testnet")
+  blockNumber       Int
+  contractAddress   String
+  ipfsMetadataCid   String?
+  ipfsFileCid       String?
+  chainId           Int?
+  registeredAt      DateTime @default(now())
+  blockchainTimestamp DateTime?
+  status            String   @default("CONFIRMED")
+}
+
+model AIAnalysis {
+  id          String   @id @default(cuid())
+  contentId   String   @unique
+  content     Content  @relation(fields: [contentId], references: [contentId], onDelete: Cascade)
+  description String?
+  summary     String?
+  tags        String?
+  suggestedCategory String?
+  keywords    String?
+  confidence  Float?
+  createdAt   DateTime @default(now())
+}
